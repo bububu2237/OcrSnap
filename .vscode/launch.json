@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug MySnipaste",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/MySnipaste/bin/Debug/net8.0-windows/MySnipaste.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/MySnipaste",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}

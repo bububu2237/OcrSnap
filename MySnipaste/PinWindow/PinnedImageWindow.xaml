@@ -1,0 +1,16 @@
+<Window x:Class="OcrSnap.PinWindow.PinnedImageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="True"
+        ResizeMode="NoResize">
+    <Border BorderBrush="#88FFE066" BorderThickness="1.5">
+        <Border.Effect>
+            <DropShadowEffect Color="#FFE066" BlurRadius="18" Opacity="0.45" ShadowDepth="0"/>
+        </Border.Effect>
+        <Image x:Name="PinImage" Stretch="Uniform"/>
+    </Border>
+</Window>
