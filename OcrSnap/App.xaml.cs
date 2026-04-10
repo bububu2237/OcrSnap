@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using Hardcodet.Wpf.TaskbarNotification;
-using Microsoft.Extensions.DependencyInjection;
 using OcrSnap.Core;
 using OcrSnap.Ocr;
+using OcrSnap.PinWindow;
 using OcrSnap.Screenshot;
 using OcrSnap.Settings;
 
@@ -11,7 +12,8 @@ namespace OcrSnap
 {
     public partial class App : Application
     {
-        public static IServiceProvider Services { get; private set; } = null!;
+        /// <summary>靜態 OCR 服務，取代 DI 容器（單一服務不需要 DI 的額外開銷）</summary>
+        public static WindowsOcrService OcrService { get; } = new WindowsOcrService();
         public static AppSettings Settings { get; private set; } = null!;
 
         private GlobalHotkey _hotkey = null!;
@@ -20,16 +22,30 @@ namespace OcrSnap
         private int _captureHotkeyId = -1;
         private System.Windows.Controls.MenuItem _menuCapture = null!;
 
+        [DllImport("kernel32.dll")]
+        private static extern bool SetProcessWorkingSetSize(IntPtr handle, nint minSize, nint maxSize);
+
+        /// <summary>
+        /// 釋放所有可回收記憶體並修剪工作集，讓 Task Manager 顯示接近真實的待機記憶體。
+        /// 在所有使用者視窗關閉、回到系統匣待機時呼叫。
+        /// </summary>
+        public static void TrimMemory()
+        {
+            GC.Collect(2, GCCollectionMode.Aggressive);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(2, GCCollectionMode.Aggressive);
+            // 告知 Windows 可將工作集頁面換出，讓 Task Manager 數字回落
+            SetProcessWorkingSetSize(System.Diagnostics.Process.GetCurrentProcess().Handle, -1, -1);
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
             Settings = AppSettings.Load();
 
-            // 建立 DI 容器
-            var services = new ServiceCollection();
-            services.AddSingleton<WindowsOcrService>();
-            Services = services.BuildServiceProvider();
+            // 同步「隨系統啟動」Registry 狀態（避免手動改設定後不一致）
+            StartupHelper.SetEnabled(Settings.RunAtStartup);
 
             // 建立隱藏宿主視窗（提供 HWND 給熱鍵）
             _hostWindow = new Window
@@ -77,6 +93,23 @@ namespace OcrSnap
             menu.Items.Add(menuExit);
 
             _notifyIcon.ContextMenu = menu;
+
+            // 還原上次釘選的視窗
+            RestorePinnedWindows();
+
+            // 啟動後修剪工作集，讓 Task Manager 顯示低待機記憶體
+            TrimMemory();
+        }
+
+        private static void RestorePinnedWindows()
+        {
+            PinSession.Load();
+            foreach (var entry in PinSession.Entries)
+            {
+                var bmp = PinSession.LoadImage(entry);
+                if (bmp == null) continue;
+                new PinnedImageWindow(bmp, entry).Show();
+            }
         }
 
         private void RegisterCaptureHotkey()

@@ -10,6 +10,7 @@ namespace OcrSnap.Core
         public uint HotkeyKey { get; set; } = 0x73;             // F4 = 0x73
         public string OcrWindowsLanguage { get; set; } = "zh-Hant";
         public bool ColorDisplayHex { get; set; } = false;       // false=RGB, true=HEX
+        public bool RunAtStartup { get; set; } = false;
 
         private static readonly string SettingsPath =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),

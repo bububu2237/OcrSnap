@@ -155,7 +155,7 @@
         </Border>
 
         <StackPanel Margin="16,12,16,16">
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                 <CheckBox x:Name="ChkCtrl"  Content="Ctrl"  Margin="0,0,10,0"
                           Style="{StaticResource DarkCheck}" VerticalAlignment="Center"/>
                 <CheckBox x:Name="ChkAlt"   Content="Alt"   Margin="0,0,10,0"
@@ -172,6 +172,10 @@
                     <ComboBoxItem Content="Print Screen" Tag="44"/>
                 </ComboBox>
             </StackPanel>
+
+            <CheckBox x:Name="ChkRunAtStartup" Content="隨系統啟動"
+                      Margin="0,0,0,16"
+                      Style="{StaticResource DarkCheck}"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="確定" Width="70" Margin="0,0,8,0"

@@ -7,7 +7,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Microsoft.Extensions.DependencyInjection;
 using OcrSnap.Annotation.Tools;
 using OcrSnap.Ocr;
 using OcrSnap.PinWindow;
@@ -47,6 +46,7 @@ namespace OcrSnap.Annotation
 
             SourceInitialized += OnSourceInitialized;
             Loaded += (_, _) => BuildColorPalette();
+            Closed += OnClosed;
             KeyDown += OnKeyDown;
             MouseLeftButtonDown += OnWindowMouseDown;
             MouseMove += OnWindowMouseMove;
@@ -262,14 +262,17 @@ namespace OcrSnap.Annotation
         }
 
         private void BtnCopy_Click(object sender, RoutedEventArgs e)
-            => Clipboard.SetImage(RenderToBitmap());
+        {
+            Clipboard.SetImage(RenderToBitmap());
+            Close();
+        }
 
         private async void BtnOcr_Click(object sender, RoutedEventArgs e)
         {
             BtnOcr.IsEnabled = false;
             OcrLabel.Visibility = Visibility.Collapsed;
             OcrSpinner.Visibility = Visibility.Visible;
-            var winOcr = App.Services.GetRequiredService<WindowsOcrService>();
+            var winOcr = App.OcrService;
             try
             {
                 var bitmap = RenderToBitmap();
@@ -295,6 +298,15 @@ namespace OcrSnap.Annotation
         }
 
         private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+
+        private void OnClosed(object? sender, EventArgs e)
+        {
+            // 清除圖片參考，讓 GC 回收截圖像素記憶體
+            CapturedImage.Source = null;
+            DrawCanvas.Children.Clear();
+            _undoStack.Clear();
+            App.TrimMemory();
+        }
 
         // ── 線寬 ──────────────────────────────────────────────────
 

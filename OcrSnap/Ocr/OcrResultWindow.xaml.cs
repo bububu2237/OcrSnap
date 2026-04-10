@@ -9,7 +9,6 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace OcrSnap.Ocr
 {
@@ -36,6 +35,7 @@ namespace OcrSnap.Ocr
 
             SourceInitialized += (_, _) => SetDarkTitleBar();
             Loaded += OnLoaded;
+            Closed += OnClosed;
 
             PreviewCanvas.MouseLeftButtonDown += PreviewCanvas_MouseDown;
             PreviewCanvas.MouseMove += PreviewCanvas_MouseMove;
@@ -170,7 +170,7 @@ namespace OcrSnap.Ocr
             try
             {
                 string bcp47 = (ModelBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "zh-Hant";
-                var winOcr = App.Services.GetRequiredService<WindowsOcrService>();
+                var winOcr = App.OcrService;
                 var cropResult = await winOcr.RecognizeAsync(crop, bcp47);
                 ResultText.Text = !string.IsNullOrWhiteSpace(cropResult.Markdown)
                     ? cropResult.Markdown
@@ -196,6 +196,14 @@ namespace OcrSnap.Ocr
             Clipboard.SetText(ResultText.Text);
         }
 
+        private void OnClosed(object? sender, EventArgs e)
+        {
+            // 清除大型圖片參考，讓 GC 盡快回收 BitmapSource 記憶體
+            PreviewCanvas.Children.Clear();
+            _boxElements.Clear();
+            App.TrimMemory();
+        }
+
         private void BtnShowBoxes_Click(object sender, RoutedEventArgs e)
         {
             _showBoxes = BtnShowBoxes.IsChecked == true;
@@ -211,7 +219,7 @@ namespace OcrSnap.Ocr
             try
             {
                 string bcp47 = (ModelBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "zh-Hant";
-                var winOcr = App.Services.GetRequiredService<WindowsOcrService>();
+                var winOcr = App.OcrService;
                 _result = await winOcr.RecognizeAsync(_image, bcp47);
                 // 成功才儲存語言偏好
                 App.Settings.OcrWindowsLanguage = bcp47;

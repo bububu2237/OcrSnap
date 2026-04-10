@@ -42,6 +42,8 @@ namespace OcrSnap.Settings
                 }
             }
             if (KeyBox.SelectedIndex < 0) KeyBox.SelectedIndex = 1;
+
+            ChkRunAtStartup.IsChecked = StartupHelper.IsEnabled;
         }
 
         private void BtnOk_Click(object sender, RoutedEventArgs e)
@@ -55,10 +57,16 @@ namespace OcrSnap.Settings
             if (KeyBox.SelectedItem is ComboBoxItem keyItem)
                 key = (uint)int.Parse(keyItem.Tag?.ToString() ?? "113");
 
+            bool runAtStartup = ChkRunAtStartup.IsChecked == true;
+
             var s = App.Settings;
             s.HotkeyModifiers = mods;
             s.HotkeyKey       = key;
+            s.RunAtStartup    = runAtStartup;
             s.Save();
+
+            // 同步寫入 / 移除 Registry 啟動項
+            StartupHelper.SetEnabled(runAtStartup);
 
             DialogResult = true;
         }

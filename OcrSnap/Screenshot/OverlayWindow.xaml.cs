@@ -222,9 +222,15 @@ namespace OcrSnap.Screenshot
                 int cropW = Math.Clamp((int)_selectedRect.Width, 1, _screenBitmap!.PixelWidth - cropX);
                 int cropH = Math.Clamp((int)_selectedRect.Height, 1, _screenBitmap!.PixelHeight - cropY);
 
-                var captured = new System.Windows.Media.Imaging.CroppedBitmap(
+                var cropped = new System.Windows.Media.Imaging.CroppedBitmap(
                     _screenBitmap!, new System.Windows.Int32Rect(cropX, cropY, cropW, cropH));
+                // 深拷貝像素到獨立 WriteableBitmap，打斷對全螢幕 _screenBitmap 的參考鏈
+                var captured = new System.Windows.Media.Imaging.WriteableBitmap(cropped);
                 captured.Freeze();
+
+                // 立即釋放全螢幕截圖，讓 GC 可回收這塊大記憶體（通常 100~400 MB）
+                ScreenImage.Source = null;
+                _screenBitmap = null;
 
                 Hide();
 

@@ -11,6 +11,10 @@ namespace OcrSnap.Screenshot
         private const int SampleRadius = 8;   // 取樣半徑（像素），共 17x17
         private const int DisplaySize = 160;   // 顯示區域大小
 
+        // 重用緩衝，避免每次 MouseMove 建立新物件
+        private WriteableBitmap? _zoomBitmap;
+        private readonly byte[] _pixelBuf4 = new byte[4]; // GetBitmapPixel 重用
+
         public MagnifierControl()
         {
             InitializeComponent();
@@ -38,9 +42,20 @@ namespace OcrSnap.Screenshot
 
             if (srcW <= 0 || srcH <= 0) return;
 
-            // 裁切並縮放
-            var cropped = new CroppedBitmap(fullScreen, new Int32Rect(srcX, srcY, srcW, srcH));
-            ZoomImage.Source = cropped;
+            // 重用 WriteableBitmap；僅在尺寸改變時重建（通常只建一次）
+            if (_zoomBitmap == null || _zoomBitmap.PixelWidth != srcW || _zoomBitmap.PixelHeight != srcH)
+            {
+                _zoomBitmap = new WriteableBitmap(srcW, srcH, 96, 96, PixelFormats.Pbgra32, null);
+                ZoomImage.Source = _zoomBitmap;
+            }
+
+            // 直接把全螢幕像素複製進 WriteableBitmap，不建立任何中間物件
+            _zoomBitmap.Lock();
+            fullScreen.CopyPixels(new Int32Rect(srcX, srcY, srcW, srcH),
+                _zoomBitmap.BackBuffer, _zoomBitmap.BackBufferStride * srcH, _zoomBitmap.BackBufferStride);
+            _zoomBitmap.AddDirtyRect(new Int32Rect(0, 0, srcW, srcH));
+            _zoomBitmap.Unlock();
+
             ZoomImage.Width = DisplaySize;
             ZoomImage.Height = 120;
 
@@ -50,7 +65,7 @@ namespace OcrSnap.Screenshot
             CrossH.X1 = 0; CrossH.Y1 = cy; CrossH.X2 = DisplaySize; CrossH.Y2 = cy;
             CrossV.X1 = cx; CrossV.Y1 = 0; CrossV.X2 = cx; CrossV.Y2 = 120;
 
-            // 中心像素顏色
+            // 中心像素顏色（直接從全螢幕取，不建立 CroppedBitmap）
             var color = GetBitmapPixel(fullScreen, imgX, imgY);
             ColorSwatch.Background = new SolidColorBrush(color);
 
@@ -62,15 +77,13 @@ namespace OcrSnap.Screenshot
             CoordText.Text = $"X:{(int)screenPos.X}  Y:{(int)screenPos.Y}";
         }
 
-        private static Color GetBitmapPixel(BitmapSource bmp, int x, int y)
+        private Color GetBitmapPixel(BitmapSource bmp, int x, int y)
         {
             x = Math.Clamp(x, 0, bmp.PixelWidth - 1);
             y = Math.Clamp(y, 0, bmp.PixelHeight - 1);
-
-            var cropped = new CroppedBitmap(bmp, new Int32Rect(x, y, 1, 1));
-            byte[] pixels = new byte[4];
-            cropped.CopyPixels(pixels, 4, 0);
-            return Color.FromRgb(pixels[2], pixels[1], pixels[0]); // BGR -> RGB
+            // 直接從來源 BitmapSource 取單一像素，不建立 CroppedBitmap
+            bmp.CopyPixels(new Int32Rect(x, y, 1, 1), _pixelBuf4, 4, 0);
+            return Color.FromRgb(_pixelBuf4[2], _pixelBuf4[1], _pixelBuf4[0]); // BGR -> RGB
         }
     }
 }

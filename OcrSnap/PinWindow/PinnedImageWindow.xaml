@@ -5,7 +5,7 @@
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True"
-        ShowInTaskbar="True"
+        ShowInTaskbar="False"
         ResizeMode="NoResize">
     <Border BorderBrush="#88FFE066" BorderThickness="1.5">
         <Border.Effect>

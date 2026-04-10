@@ -3,8 +3,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
+using OcrSnap.Core;
 using OcrSnap.Ocr;
 
 namespace OcrSnap.PinWindow
@@ -12,23 +12,61 @@ namespace OcrSnap.PinWindow
     public partial class PinnedImageWindow : Window
     {
         private readonly BitmapSource _image;
+        private string? _pinId;   // null = 尚未存入 session（還原視窗時已有 id）
         private bool _isDragging;
         private Point _dragStart;
 
+        /// <summary>使用者釘選新截圖時呼叫；自動加入 PinSession。</summary>
         public PinnedImageWindow(BitmapSource image)
         {
             InitializeComponent();
             _image = image;
             PinImage.Source = image;
-
             Width = image.PixelWidth;
             Height = image.PixelHeight;
+            Init();
+        }
 
-            Loaded += (_, _) => BuildContextMenu();
+        /// <summary>App 啟動還原已存的釘選時呼叫；不重複寫 PinSession。</summary>
+        public PinnedImageWindow(BitmapSource image, PinEntry entry)
+        {
+            InitializeComponent();
+            _image = image;
+            _pinId = entry.Id;
+            PinImage.Source = image;
+            Width = entry.Width;
+            Height = entry.Height;
+            Left = entry.Left;
+            Top = entry.Top;
+            Opacity = entry.Opacity;
+            Init();
+        }
+
+        private void Init()
+        {
+            Loaded += OnLoaded;
+            Closed += OnClosed;
             MouseLeftButtonDown += OnMouseDown;
             MouseMove += OnMouseMove;
             MouseLeftButtonUp += OnMouseUp;
             MouseWheel += OnMouseWheel;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            // 新釘選：存入 session（位置在 Loaded 後才確定）
+            if (_pinId == null)
+                _pinId = PinSession.AddPin(_image, Left, Top, Width, Height);
+
+            BuildContextMenu();
+        }
+
+        private void OnClosed(object? sender, EventArgs e)
+        {
+            if (_pinId != null)
+                PinSession.RemovePin(_pinId);
+            PinImage.Source = null;
+            App.TrimMemory();
         }
 
         private void BuildContextMenu()
@@ -38,12 +76,11 @@ namespace OcrSnap.PinWindow
             var menuOcr = new System.Windows.Controls.MenuItem { Header = "OCR 文字辨識" };
             menuOcr.Click += async (_, _) =>
             {
-                var winOcr = App.Services.GetRequiredService<WindowsOcrService>();
+                var winOcr = App.OcrService;
                 try
                 {
                     var result = await winOcr.RecognizeAsync(_image, App.Settings.OcrWindowsLanguage);
-                    var win = new OcrResultWindow(result, _image);
-                    win.Show();
+                    new OcrResultWindow(result, _image).Show();
                 }
                 catch (Exception ex)
                 {
@@ -90,11 +127,16 @@ namespace OcrSnap.PinWindow
         {
             _isDragging = false;
             ReleaseMouseCapture();
+            // 拖曳結束後更新持久化位置
+            if (_pinId != null)
+                PinSession.UpdatePin(_pinId, Left, Top, Opacity);
         }
 
         private void OnMouseWheel(object sender, MouseWheelEventArgs e)
         {
             Opacity = Math.Clamp(Opacity + e.Delta / 2000.0, 0.1, 1.0);
+            if (_pinId != null)
+                PinSession.UpdatePin(_pinId, Left, Top, Opacity);
         }
 
         private void SaveImage()

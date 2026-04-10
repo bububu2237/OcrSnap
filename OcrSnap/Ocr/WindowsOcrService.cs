@@ -13,7 +13,6 @@ using Windows.Storage.Streams;
 using WinBitmapDecoder = Windows.Graphics.Imaging.BitmapDecoder;
 using WinBitmapPixelFormat = Windows.Graphics.Imaging.BitmapPixelFormat;
 using WinBitmapAlphaMode = Windows.Graphics.Imaging.BitmapAlphaMode;
-using WinSoftwareBitmap = Windows.Graphics.Imaging.SoftwareBitmap;
 
 namespace OcrSnap.Ocr
 {
@@ -48,20 +47,23 @@ namespace OcrSnap.Ocr
                 pngBytes = ms.ToArray();
             }
 
-            // PNG bytes → SoftwareBitmap（WinRT）
-            WinSoftwareBitmap softwareBitmap;
+            // PNG bytes → SoftwareBitmap（WinRT），明確 using 確保非託管資源即時釋放
+            Windows.Media.Ocr.OcrResult winResult;
+            var sw = Stopwatch.StartNew();
             using (var raStream = new InMemoryRandomAccessStream())
             {
                 await raStream.WriteAsync(pngBytes.AsBuffer());
                 raStream.Seek(0);
                 var decoder = await WinBitmapDecoder.CreateAsync(raStream);
-                softwareBitmap = await decoder.GetSoftwareBitmapAsync(
+                using var softwareBitmap = await decoder.GetSoftwareBitmapAsync(
                     WinBitmapPixelFormat.Bgra8, WinBitmapAlphaMode.Premultiplied);
+                winResult = await engine.RecognizeAsync(softwareBitmap);
             }
-
-            var sw = Stopwatch.StartNew();
-            var winResult = await engine.RecognizeAsync(softwareBitmap);
             sw.Stop();
+
+            // 辨識完成後立即回收 WinRT 非託管資源
+            GC.Collect(2, GCCollectionMode.Optimized);
+            GC.WaitForPendingFinalizers();
 
             var sb = new StringBuilder();
             var regions = new List<OcrRegion>();
