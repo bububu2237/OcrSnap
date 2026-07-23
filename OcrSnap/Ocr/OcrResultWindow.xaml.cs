@@ -196,11 +196,51 @@ namespace OcrSnap.Ocr
             Clipboard.SetText(ResultText.Text);
         }
 
+        private void BtnCopyTranslation_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(TranslationText.Text);
+        }
+
+        private async void BtnTranslate_Click(object sender, RoutedEventArgs e)
+        {
+            if (!TranslationService.IsConfigured)
+            {
+                MessageBox.Show("尚未設定翻譯服務，請至系統匣圖示「設定」完成 API 設定後再試。", "尚未設定",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(ResultText.Text)) return;
+
+            string targetLabel = (TranslateLangBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "繁體中文";
+
+            BtnTranslate.IsEnabled = false;
+            TranslateLabel.Visibility = Visibility.Collapsed;
+            TranslateSpinner.Visibility = Visibility.Visible;
+            try
+            {
+                string translated = await TranslationService.TranslateAsync(ResultText.Text, targetLabel);
+                TranslationText.Text = translated;
+                TranslationPanel.Visibility = Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("翻譯失敗：" + ex.Message, "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                BtnTranslate.IsEnabled = true;
+                TranslateLabel.Visibility = Visibility.Visible;
+                TranslateSpinner.Visibility = Visibility.Collapsed;
+            }
+        }
+
         private void OnClosed(object? sender, EventArgs e)
         {
             // 清除大型圖片參考，讓 GC 盡快回收 BitmapSource 記憶體
             PreviewCanvas.Children.Clear();
             _boxElements.Clear();
+            TranslationText.Text = "";
             App.TrimMemory();
         }
 

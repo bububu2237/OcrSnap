@@ -44,6 +44,10 @@ namespace OcrSnap.Settings
             if (KeyBox.SelectedIndex < 0) KeyBox.SelectedIndex = 1;
 
             ChkRunAtStartup.IsChecked = StartupHelper.IsEnabled;
+
+            TxtTranslateApiUrl.Text = s.TranslateApiUrl;
+            TxtTranslateApiKey.Text = s.TranslateApiKey;
+            TxtTranslateModel.Text = s.TranslateModel;
         }
 
         private void BtnOk_Click(object sender, RoutedEventArgs e)
@@ -63,6 +67,9 @@ namespace OcrSnap.Settings
             s.HotkeyModifiers = mods;
             s.HotkeyKey       = key;
             s.RunAtStartup    = runAtStartup;
+            s.TranslateApiUrl = TxtTranslateApiUrl.Text.Trim();
+            s.TranslateApiKey = TxtTranslateApiKey.Text.Trim();
+            s.TranslateModel  = TxtTranslateModel.Text.Trim();
             s.Save();
 
             // 同步寫入 / 移除 Registry 啟動項

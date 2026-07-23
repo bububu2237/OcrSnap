@@ -12,6 +12,11 @@ namespace OcrSnap.Core
         public bool ColorDisplayHex { get; set; } = false;       // false=RGB, true=HEX
         public bool RunAtStartup { get; set; } = false;
 
+        // 翻譯服務（地端 LLM，OpenAI 相容 API）— 不設預設值，避免內部位址/金鑰進 repo
+        public string TranslateApiUrl { get; set; } = "";
+        public string TranslateApiKey { get; set; } = "";
+        public string TranslateModel { get; set; } = "";
+
         private static readonly string SettingsPath =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                          "OcrSnap", "settings.json");

@@ -207,6 +207,28 @@
                 </Button>
 
                 <Rectangle Width="1" Height="16" Fill="#444444" Margin="0,0,6,0" VerticalAlignment="Center"/>
+
+                <!-- 翻譯目標語言 -->
+                <ComboBox x:Name="TranslateLangBox" Style="{StaticResource DarkCombo}"
+                          Width="100" VerticalAlignment="Center" Margin="0,0,6,0">
+                    <ComboBoxItem Content="繁體中文" IsSelected="True"/>
+                    <ComboBoxItem Content="簡體中文"/>
+                    <ComboBoxItem Content="English"/>
+                </ComboBox>
+
+                <Button x:Name="BtnTranslate" Style="{StaticResource DarkBtn}"
+                        Click="BtnTranslate_Click" Margin="0,0,6,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="TranslateLabel" Text="翻譯"/>
+                        <ProgressBar x:Name="TranslateSpinner" IsIndeterminate="True"
+                                     Width="60" Height="3" Margin="6,0,0,0"
+                                     VerticalAlignment="Center" Visibility="Collapsed"
+                                     BorderThickness="0"
+                                     Foreground="#4D9EFF" Background="Transparent"/>
+                    </StackPanel>
+                </Button>
+
+                <Rectangle Width="1" Height="16" Fill="#444444" Margin="0,0,6,0" VerticalAlignment="Center"/>
                 <TextBlock Text="時間：" VerticalAlignment="Center" Foreground="#888888"/>
                 <TextBlock x:Name="TimeLabel" VerticalAlignment="Center" Foreground="#AAAAAA"/>
             </WrapPanel>
@@ -243,6 +265,25 @@
                 <TextBlock DockPanel.Dock="Top" Text="圖片預覽"
                            FontWeight="SemiBold" Foreground="#AAAAAA"
                            Margin="8,6,8,4" FontSize="12"/>
+
+                <StackPanel x:Name="TranslationPanel" DockPanel.Dock="Bottom"
+                            Visibility="Collapsed" MaxHeight="160">
+                    <Rectangle Height="1" Fill="#333333" Margin="4,6,4,4"/>
+                    <Grid Margin="8,0,8,4">
+                        <TextBlock Text="翻譯結果" FontWeight="SemiBold"
+                                   Foreground="#AAAAAA" FontSize="12"
+                                   HorizontalAlignment="Left"/>
+                        <Button Content="複製翻譯" Style="{StaticResource DarkBtn}"
+                                HorizontalAlignment="Right" Padding="6,2" FontSize="11"
+                                Click="BtnCopyTranslation_Click"/>
+                    </Grid>
+                    <TextBox x:Name="TranslationText" Height="120" Margin="4,0,4,4"
+                             AcceptsReturn="True" TextWrapping="Wrap" IsReadOnly="True"
+                             VerticalScrollBarVisibility="Auto"
+                             Background="#1A1A1A" Foreground="#E0E0E0"
+                             BorderBrush="#333333" BorderThickness="1" Padding="6"/>
+                </StackPanel>
+
                 <ScrollViewer HorizontalScrollBarVisibility="Auto"
                               VerticalScrollBarVisibility="Auto"
                               Background="#1A1A1A" Margin="4,0,4,4">

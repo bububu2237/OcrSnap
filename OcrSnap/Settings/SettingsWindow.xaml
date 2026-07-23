@@ -177,6 +177,25 @@
                       Margin="0,0,0,16"
                       Style="{StaticResource DarkCheck}"/>
 
+            <TextBlock Text="翻譯服務設定（地端 LLM）"
+                       FontWeight="SemiBold" FontSize="12"
+                       Foreground="#AAAAAA" Margin="0,0,0,6"/>
+
+            <TextBlock Text="API URL" Foreground="#888888" FontSize="11" Margin="0,0,0,2"/>
+            <TextBox x:Name="TxtTranslateApiUrl" Margin="0,0,0,8"
+                     Background="#1A1A1A" Foreground="#E0E0E0"
+                     BorderBrush="#333333" BorderThickness="1" Padding="6"/>
+
+            <TextBlock Text="API Key" Foreground="#888888" FontSize="11" Margin="0,0,0,2"/>
+            <TextBox x:Name="TxtTranslateApiKey" Margin="0,0,0,8"
+                     Background="#1A1A1A" Foreground="#E0E0E0"
+                     BorderBrush="#333333" BorderThickness="1" Padding="6"/>
+
+            <TextBlock Text="Model" Foreground="#888888" FontSize="11" Margin="0,0,0,2"/>
+            <TextBox x:Name="TxtTranslateModel" Margin="0,0,0,16"
+                     Background="#1A1A1A" Foreground="#E0E0E0"
+                     BorderBrush="#333333" BorderThickness="1" Padding="6"/>
+
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="確定" Width="70" Margin="0,0,8,0"
                         IsDefault="True" Style="{StaticResource DarkBtn}"
